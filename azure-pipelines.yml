@@ -1,26 +1,34 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- master
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - environment_setup/arm-templates/*
+pr:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - environment_setup/arm-templates/*
 
-pool: 
+pool:
   vmImage: 'ubuntu-latest'
 
-container: mcr.microsoft.com/mlops/python:latest
+variables:
+- group: devopsforai-aml-vg
+
 
 steps:
-    
-- script: |
-   pip install flake8
-   pip install flake8_formatter_junit_xml
-   flake8 --format junit-xml --output-file $(Build.BinariesDirectory)/flake8_report.xml --exit-zero --ignore E111
-  displayName: 'Check code quality'
-  
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
+- task: AzureResourceGroupDeployment@2
   inputs:
-    testResultsFiles: '$(Build.BinariesDirectory)/*_report.xml'
-    testRunTitle: 'Publish test results'
+    azureSubscription: 'AzureResourceConnection'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(RESOURCE_GROUP)'
+    location: $(LOCATION)
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Build.SourcesDirectory)/environment_setup/arm-templates/cloud-environment.json'
+    overrideParameters: '-baseName $(BASE_NAME) -location $(LOCATION) -workspace $(WORKSPACE_NAME)'
+    deploymentMode: 'Incremental'
+  displayName: 'Deploy MLOps resources to Azure'
