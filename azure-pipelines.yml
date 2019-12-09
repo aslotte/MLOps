@@ -21,17 +21,14 @@ variables:
 
 
 steps:
-- task: AzureResourceManagerTemplateDeployment@3
+- task: AzureResourceGroupDeployment@2
   inputs:
-    deploymentScope: 'Resource Group'
-    azureResourceManagerConnection: 'AzureResourceConnection'
-    subscriptionId: 'b70d598f-6ad7-4a83-b960-927dfe48405f'
+    azureSubscription: 'AzureResourceConnection'
     action: 'Create Or Update Resource Group'
-    resourceGroupName: 'ml-ops'
-    location: 'East US'
+    resourceGroupName: '$(RESOURCE_GROUP)'
+    location: $(LOCATION)
     templateLocation: 'Linked artifact'
-    csmFile: 'environment_setup/arm-templates/cloud-environment.json'
+    csmFile: '$(Build.SourcesDirectory)/environment_setup/arm-templates/cloud-environment.json'
     overrideParameters: '-baseName $(BASE_NAME) -location $(LOCATION) -workspace $(WORKSPACE_NAME)'
     deploymentMode: 'Incremental'
   displayName: 'Deploy MLOps resources to Azure'
-
